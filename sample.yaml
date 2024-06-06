@@ -1,0 +1,19 @@
+title: &mytitle Learning Kubernetes
+pages: 600
+price: 1200
+phoneNumber: !!str 8877665544
+dateOfPublishing: 2012-02-19  # this is a comment
+inPrint: true
+authors:
+  - John
+  - Mark
+  - Brendan
+publisher:
+  name: O'Reilly
+  city: Boston
+  country: USA  
+anotherTitle: *mytitle
+
+---
+price: 677
+

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  labels:
+   app: frontend
+   version: "1.2.4"
+  name: my-app-rs-1
+spec:
+  replicas: 3
+  selector:
+   matchExpressions:
+     - {key: version, operator: In, values: [1.0.1,2.0.2]}
+  template:
+    metadata:
+      labels:
+        app: my-frontend-pod
+        version: 1.0.1
+    spec:
+      containers:
+      - image: nginx
+        name: my-nginx
+        ports:
+          - containerPort: 80
+            name: http
+            protocol: TCP

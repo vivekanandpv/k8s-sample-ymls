@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+   app: frontend
+   version: "1.2.4"
+  name: my-app-dep
+  annotations:
+    deployment.kubernetes.io/revision: "1.25.5"
+    kubernetes.io/change-cause: "Updated to 1.25.5"
+spec:
+  replicas: 5
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 20%
+      maxUnavailable: 20%
+    type: RollingUpdate
+  selector:
+   matchLabels:
+    app: my-frontend-pod
+  template:
+    metadata:
+      labels:
+        app: my-frontend-pod
+    spec:
+      containers:
+      - image: nginx
+        name: my-nginx
+        ports:
+          - containerPort: 80
+            name: http
+            protocol: TCP
