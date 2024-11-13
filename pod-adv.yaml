@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-nginx-pod
+  labels:
+    app: ng
+    version: v1
+spec:
+  containers:
+    - image: nginx
+      name: my-nginx-container
+
+      # Always (default): regardless of whether it exited successfully or with an error.
+      # OnFailure: if it exits with a non-zero exit code (indicating an error).
+      # Never: never restart the container, even if it exits with an error.
+      restartPolicy: OnFailure
+
+      env:
+        - name: MESSAGE
+          value: Good day!
+        - name: YEAR
+          value: 2024
+
+      # This is useful for tasks like running initialization scripts,
+      # cleaning up resources before termination, or performing custom health checks.
+      lifecycle:
+        postStart: # immediately after a container is started.
+          exec:
+            command:
+              ["/bin/sh", "-c", "echo 'Container started!' > /tmp/started"]
+        preStop: # immediately before a container is terminated.
+          exec:
+            command:
+              ["/bin/sh", "-c", "Container will be stopped!' > /tmp/stopped"]
+
+      # Controls when Kubernetes should pull (download) the container image from a registry.
+      # Always: Pull the image every time the pod is created or restarted. Ensures you have the latest image but can increase startup time.
+      # IfNotPresent: Pull the image only if it's not already present on the node. Faster startup but might use an outdated image.
+      # Never: Never pull the image. Use the local image if available. Useful for offline environments or when using a specific local image.
+      # If :latest tag is used, the default is Always. Otherwise, it's IfNotPresent.
+      imagePullPolicy: IfNotPresent
+      ports:
+        # hostPort (not provided here) maps a container port to a port on the host node's network interface.
+        # can limit pod scheduling flexibility and potentially lead to port conflicts.
+        # not recommended in general use-cases.
+        - containerPort: 80
+          name: http # optional, for clarity and organization, especially when a container exposes multiple ports
+          protocol: TCP # TCP is default, can also be UDP (case-sensitive!)
+      resources:
+        requests: # minimum
+          cpu: 100m # 100 millicores = 0.1 of a CPU core
+          memory: 256Mi # 256 mebibytes (1 me'bi'byte = 2^10 bytes, 1 me'ga'byte = 10^6 bytes)
+        limits: # maximum
+          cpu: 500m
+          memory: 1Gi
+
+      # Internal health of the application within the container.
+      # Checks if the container is running correctly.
+      # If the liveness probe fails, Kubernetes restarts the container to try to recover it.
+      livenessProbe: # to check whether the pod is alive
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 15 # wait 15 seconds before first probe
+        periodSeconds: 20 # every 20 seconds after the first probe
+
+      # External service availability of the container.
+      # Checks if the container is ready to serve traffic.
+      # If the readiness probe fails, Kubernetes stops sending traffic to the container.
+      # It removes the pod from the service's endpoints, preventing new requests from reaching it.
+      readinessProbe: # to check whether the pod is ready (in the beginning)
+        httpGet:
+          path: /healthz
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 10
