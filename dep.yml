@@ -2,32 +2,71 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-   app: frontend
-   version: "1.2.4"
+    app: frontend
   name: my-app-dep
   annotations:
-    deployment.kubernetes.io/revision: "1.25.5"
-    kubernetes.io/change-cause: "Updated to 1.25.5"
+    # check for annotation -> deployment.kubernetes.io/revision in the replica-sets
+    # created as part of this deployment (observe the incremented numbers)
+    kubernetes.io/change-cause: "Initial Release 1.24"
 spec:
   replicas: 5
+
+  # Default is 10
   revisionHistoryLimit: 10
+
+  # Default is RollingUpdate anyway
   strategy:
     rollingUpdate:
+      # Surge means acquire resources first and then release
+      # + No degradation of service
+      # - Extra resource consumption
       maxSurge: 20%
+
+      # Unavailable means release the resources first and then acquire
+      # + No additional resource consumption
+      # - Degradation of service
       maxUnavailable: 20%
+
+      # Please note that maxSurge and maxUnavailable are not in opposition,
+      # they define upper and lower bounds of the number pods available
+      # during the update process. Kubernetes continuously monitors and adjusts
+      # the rollout process accordingly. The system ensures the number of available
+      # pods always stays within the defined boundaries.
+
+      # Special notes:
+      # 1. If the replicas = 3 and maxSurge = 20%, then the surge factor is 0.6 pods,
+      # in such situations, the system prioritizes the stability and avoids over-provision.
+      # this means, the maxSurge in this case has practically become zero.
+
+      # 2. maxSurge and maxUnavailable both cannot be 0 or 0%
+
+      # 3. if the replicas = 3, maxSurge = 20%, and maxUnavailable = 20%,
+      # then the maxSurge will not be floored to zero, but promoted to 1 as 0 is
+      # not allowed when maxUnavailable is zero. Similarly maxUnavailable will
+      # also be promoted to 1 as it cannot be floored to zero when maxSurge is effectively zero.
+      # Hence, effectively the configuration becomes maxSurge=1 and maxUnavailable=1
+
+      # 4. Generally, for smaller number of replicas, integer factors for maxSurge
+      # and maxUnavailable are preferred. Percentage is preferred for larger number of replicas.
+
+      # 5. If the maxSurge or maxUnavailable is a decimal number such as 1.23,
+      # it will be truncated. 1.23 is taken as 1. If decimal number is given as a percentage,
+      # such as 1.23%, the total number of pods is then calculated, this number is floored then.
+
+      # 6. It's invalid to provide a random string for the maxSurge or maxUnavailable
     type: RollingUpdate
   selector:
-   matchLabels:
-    app: my-frontend-pod
+    matchLabels:
+      app: my-frontend-pod
   template:
     metadata:
       labels:
         app: my-frontend-pod
     spec:
       containers:
-      - image: nginx
-        name: my-nginx
-        ports:
-          - containerPort: 80
-            name: http
-            protocol: TCP
+        - image: nginx:1.24
+          name: my-nginx
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP

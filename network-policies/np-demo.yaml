@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: np-source-pod
+  labels:
+    app: np-source
+spec:
+  containers:
+    - image: nginx
+      name: np-source-container
+      ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: np-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  selector:
+    app: np-source
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-only-np-consumer
+spec:
+  podSelector:
+    matchLabels:
+      app: np-source
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: np-consumer
+      ports:
+        - protocol: TCP
+          port: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: np-consumer-pod
+  labels:
+    app: np-consumer
+spec:
+  containers:
+    - image: nginx
+      name: np-consumer-container
+      ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: np-non-consumer-pod
+  labels:
+    app: np-non-consumer
+spec:
+  containers:
+    - image: nginx
+      name: np-non-consumer-container
+      ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+# minikube default network driver doesn't support network policies!
+# minikube start --network-plugin=cni --cni=calico
+# exec into both consumer and non-consumer and curl to the cluster ip service
+# kubectl exec -it np-consumer-pod -- bash  # allowed
+# kubectl exec -it np-non-consumer-pod -- bash  # not allowed
+
+# additional notes
+
+# 1. Policy to deny all traffic (isolate pod)
+# spec:
+#   podSelector: {} # Selects all pods in the namespace
+#   policyTypes:
+#   - Ingress
+#   - Egress
+
+# 2. Policy to allow ingress from a particular namespace
+# spec:
+#   podSelector:
+#     matchLabels:
+#       key: value  # source pod label
+#   policyTypes:
+#   - Ingress
+#   ingress:
+#   - from:
+#     - namespaceSelector:
+#         matchLabels:
+#           name: namespace-value # requester namespace
+
+# 3. Policy of no ingress
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: value  # source pod label
+#   policyTypes:
+#   - Ingress
+

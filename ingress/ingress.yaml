@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ingress-demo-pod-1
+  labels:
+    app: ingress-demo-backend-1
+spec:
+  containers:
+    - image: vivekanandpv/sb-env-app
+      name: ingress-demo-container
+      env:
+        - name: APP_KEY
+          value: foo-message
+        - name: APP_VALUE
+          value: foo service greets you!
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: ingress-demo-backend-1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ingress-demo-pod-2
+  labels:
+    app: ingress-demo-backend-2
+spec:
+  containers:
+    - image: vivekanandpv/sb-env-app
+      name: ingress-demo-container
+      env:
+        - name: APP_KEY
+          value: bar-message
+        - name: APP_VALUE
+          value: bar service greets you!
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bar-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: ingress-demo-backend-2
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: path-routing-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /foo(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: foo-service
+                port:
+                  number: 8080
+          - path: /bar(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: bar-service
+                port:
+                  number: 8080
+---
+# minikube addons enable ingress
+# kubectl apply -f ingress.yaml
+# minikube tunnel
+# http://localhost/foo/api/v1/sample
+# http://localhost/bar/api/v1/sample
+---
+
