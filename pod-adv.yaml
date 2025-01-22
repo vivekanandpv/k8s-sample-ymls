@@ -6,6 +6,65 @@ metadata:
     app: ng
     version: v1
 spec:
+  # assuming a certain node has a certain label, nodeSelector can be used to schedule
+  # that pod on that node. Nodes are usually created at the time of setting up of the cluster.
+  # If you want to add a node manually, a Node object can be used.
+  # However, you can also add a label to an existing node with:
+  # kubectl label nodes <node-name> <key>=<value>
+  nodeSelector:
+    instanceType: large
+
+  # Node affinity is an advanced version of nodeSelector that supports soft (preferred)
+  # and hard (required) constraints.
+  # requiredDuringSchedulingIgnoredDuringExecution → Hard rule (must be satisfied).
+  # preferredDuringSchedulingIgnoredDuringExecution → Soft rule
+  # (scheduler tries but can ignore if no suitable node is found).
+  affinity:
+    nodeAffinity:
+      # The pod must be scheduled on a node with instanceType as large or xlarge or xxlarge
+      requiredDuringSchedulingIgnoredDuringExecution: # Hard rule
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: instanceType
+                operator: In
+                values:
+                  - large
+                  - xlarge
+                  - xxlarge
+              #  operator as NotIn, DoesNotExist, Gt, Lt for node anti-affinity
+              # - key: gpu
+              #   operator: DoesNotExist
+
+      # The scheduler prefers nodes in region as us-east or india, but it’s not mandatory.
+      preferredDuringSchedulingIgnoredDuringExecution: # Soft rule
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: region
+                operator: In
+                values:
+                  - us-east
+                  - india
+
+    podAffinity:
+      # Used when you want pods to be scheduled on the same node or in close proximity.
+      # Ensures that the pod is scheduled on the same node as another pod with label app=frontend.
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: frontend
+          topologyKey: "kubernetes.io/hostname"
+
+    podAntiAffinity:
+      # Avoid Scheduling Together
+      # Used to spread pods across nodes to ensure redundancy.
+      # Ensures that this pod is not scheduled on the same node as another pod with label app=backend.
+      # topologyKey: "kubernetes.io/hostname" means the restriction is per node.
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: backend
+          topologyKey: "kubernetes.io/hostname"
   containers:
     - image: nginx
       name: my-nginx-container
@@ -19,7 +78,7 @@ spec:
         - name: MESSAGE
           value: Good day!
         - name: YEAR
-          value: 2024
+          value: "2024"
 
       # This is useful for tasks like running initialization scripts,
       # cleaning up resources before termination, or performing custom health checks.
