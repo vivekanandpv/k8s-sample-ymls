@@ -1,18 +1,24 @@
+# ReplicationController is considered deprecated in favour or ReplicaSet
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: my-app-rc
+  name: my-rc
 spec:
   replicas: 3
+  selector:
+    # Only equality based selectors; set-based selectors are not allowed here
+    app: rc-nginx-pod
+    environment: production
   template:
     metadata:
       labels:
-        app: my-frontend-pod
+        app: rc-nginx-pod
+        environment: production
     spec:
       containers:
-      - image: nginx
-        name: my-nginx
-        ports:
-          - containerPort: 80
-            name: http
-            protocol: TCP
+        - image: nginx
+          name: rc-nginx-pod-container
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP

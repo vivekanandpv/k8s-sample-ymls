@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: my-app-rs
+  labels:
+    app: frontend
+spec:
+  replicas: 3
+  selector:
+    # Equality-based Selectors
+    # These match pods based on exact label values
+    matchLabels:
+      app: my-frontend-pod
+
+    # Set-based Selectors
+    # These allow matching multiple values for a label
+    matchExpressions:
+      # app=myapp1 or app=myapp2
+      - key: app
+        operator: In
+        values: [myapp1, myapp2]
+      # Excludes tier=backend
+      - key: tier
+        operator: NotIn
+        values: [backend]
+      # Matches any pod that has the environment label, regardless of value
+      - key: environment
+        operator: Exists
+  template:
+    metadata:
+      labels:
+        app: my-frontend-pod
+    spec:
+      containers:
+        - image: nginx
+          name: my-nginx
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP

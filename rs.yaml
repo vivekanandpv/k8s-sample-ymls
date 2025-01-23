@@ -1,3 +1,4 @@
+# ReplicaSet is a more advanced version of ReplicationController
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
