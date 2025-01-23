@@ -69,6 +69,9 @@ spec:
       app: my-frontend-pod
   template:
     metadata:
+      # In a Kubernetes Deployment, the Pods created by the ReplicaSet have auto-generated names
+      # If you explicitly set template.metadata.name in the Deployment, Kubernetes will ignore it
+      # and still generate unique pod names. Kubernetes requires each Pod name to be unique within the namespace.
       labels:
         app: my-frontend-pod
     spec:

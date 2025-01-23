@@ -3,11 +3,20 @@ kind: Service
 metadata:
   name: my-app-service
 spec:
-  type: NodePort
+  type: NodePort # enables external clients access this service; dev/test only
   selector:
+    # Equality-based selector
     app: my-frontend-pod
+
+    # Set-based selectors are supported
+    # matchExpressions:
+    #   - key: app
+    #     operator: In
+    #     values: ["my-app", "test-app"]
+    #   - key: env
+    #     operator: NotIn
+    #     values: ["dev"]
   ports:
-   - targetPort: 80
-     port: 80
-     nodePort: 30001
-  
+    - targetPort: 80 # port of the ClusterIP; optional; same as port if not provided
+      port: 80 # port exposed in the pod; required
+      nodePort: 30001 # port exposed in the node, [30000-32767]; optional; random will be picked
