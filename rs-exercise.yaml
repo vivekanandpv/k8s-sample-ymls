@@ -1,0 +1,27 @@
+# ReplicaSet is a more advanced version of ReplicationController
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: my-app-rs
+  labels:
+    app: frontend
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      # app=ng or app=my-frontend-pod
+      - key: app
+        operator: In
+        values: [ng, my-frontend-pod]
+  template:
+    metadata:
+      labels:
+        app: my-frontend-pod
+    spec:
+      containers:
+        - image: nginx
+          name: my-nginx
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP

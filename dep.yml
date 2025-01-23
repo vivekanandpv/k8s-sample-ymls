@@ -1,9 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  # Labels are used to identify and select Kubernetes objects.
+  # Labels can be queried using label selectors to filter and manage objects.
   labels:
     app: frontend
   name: my-app-dep
+  # Annotations are used to store non-identifying metadata that provides
+  # additional information but is not used for selection.
+  # Unlike labels, annotations cannot be used in label selectors.
   annotations:
     # check for annotation -> deployment.kubernetes.io/revision in the replica-sets
     # created as part of this deployment (observe the incremented numbers)
@@ -12,6 +17,10 @@ spec:
   replicas: 5
 
   # Default is 10
+  # once a Deployment's revision exceeds the revisionHistoryLimit,
+  # the older revisions are cleaned up and cannot be undone
+  # If a revision is older than this limit, it is deleted,
+  # meaning kubectl rollout undo cannot restore it.
   revisionHistoryLimit: 10
 
   # Default is RollingUpdate anyway

@@ -1,0 +1,24 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: my-app-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-app-dep
+  updatePolicy:
+    updateMode: "Auto" # Can be "Off", "Initial", or "Auto"
+  # VPA overrides the CPU and memory requests/limits specified in the Deployment's Pod template
+  # The values in Deployment.spec.template.spec.containers[].resources
+  # are ignored and dynamically managed by VPA
+  resourcePolicy:
+    containerPolicies:
+      - containerName: my-app-pod
+        minAllowed:
+          cpu: "200m"
+          memory: "256Mi"
+        maxAllowed:
+          cpu: "2"
+          memory: "4Gi"
+        controlledResources: ["cpu", "memory"]
