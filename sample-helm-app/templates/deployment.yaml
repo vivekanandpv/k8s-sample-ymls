@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rand-backend-dep
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: rand-backend-pod
+  template:
+    metadata:
+      labels:
+        app: rand-backend-pod
+    spec:
+      containers:
+        - image: vivekanandpv/sb-random-api
+          name: rand-container
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+              name: http
+              protocol: TCP

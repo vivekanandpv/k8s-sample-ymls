@@ -29,5 +29,7 @@ spec:
     - port: 8080
   selector:
     app: rand-backend-pod
-  type: NodePort
+  type: LoadBalancer # also possible: NodePort
+# minikube service rand-lb  -> opens in the browser in LoadBalancer mode
+# minikube service rand-lb --url  -> in NodePort mode
 # use curl to check the load balancing in action

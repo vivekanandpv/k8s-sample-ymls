@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-nginx-pod
+  labels:
+    app: ng
+    version: v1
+spec:
+  affinity:
+    nodeAffinity:
+      # The pod must be scheduled on a node with instanceType as large or xlarge or xxlarge
+      requiredDuringSchedulingIgnoredDuringExecution: # Hard rule
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: foo
+                operator: DoesNotExist
+  containers:
+    - image: nginx
+      name: my-nginx-container
+      ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
