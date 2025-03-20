@@ -75,6 +75,7 @@ spec:
           name: http
           protocol: TCP
 # minikube default network driver doesn't support network policies!
+# This below command needs the existing minikube cluster to be deleted, otherwise the cni=calico will not set
 # minikube start --network-plugin=cni --cni=calico
 # exec into both consumer and non-consumer and curl to the cluster ip service
 # kubectl exec -it np-consumer-pod -- bash  # allowed
